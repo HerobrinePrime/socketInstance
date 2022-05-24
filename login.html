@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.27.2/axios.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding-bottom: 3rem;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        #form {
+            background: rgba(0, 0, 0, 0.15);
+            padding: 0.25rem;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            height: 9rem;
+            box-sizing: border-box;
+            backdrop-filter: blur(10px);
+        }
+
+        #name,
+        #password {
+            border: none;
+            padding: 0 1rem;
+            flex-grow: 1;
+            border-radius: 2rem;
+            margin: 0.25rem;
+        }
+
+        #input:focus {
+            outline: none;
+        }
+
+        
+
+        #form>button {
+            background: #333;
+            border: none;
+            padding: 0 1rem;
+            margin: 0.25rem;
+            border-radius: 3px;
+            outline: none;
+            color: #fff;
+            flex-grow: 2;
+            width: 6rem;
+            margin: 0 auto;
+        }
+
+        #messages {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        #messages>li {
+            padding: 0.5rem 1rem;
+        }
+
+        #messages>li:nth-child(odd) {
+            background: #efefef;
+        }
+    </style>
+</head>
+
+<body>
+    <form id="form" action="">
+        <input id="name" name="name" autocomplete="off" placeholder="name"/>
+        <input id="password" name="password" autocomplete="off" placeholder="password"/>
+        <input id="name" name="room" autocomplete="off" placeholder="room"/>
+        <button>Login</button>
+    </form>
+</body>
+<script>
+    $(function () { 
+
+        var name = document.querySelector('#name')
+        var password = document.querySelector('#name')
+
+        const require = axios.create({
+            baseURL: 'http://127.0.0.1:3000'
+            // baseURL:'http://10.1.83.123:3000/'
+        })
+
+        $('#form').on('submit', function (e) {
+            e.preventDefault()
+            require({
+                method: 'post',
+                url: '/api/login',
+                data: $(this).serialize()
+            }).then(res => {
+                if(res.data.status == 200){
+                    alert(res.data.msg)
+                    // console.log(res.data.data.token);
+                    localStorage.setItem('token',res.data.data.token)
+                    location.href = './'
+                }
+                else{
+                    alert(res.data.msg)
+                }
+            },err =>{
+                console.log(err);
+            })
+        })
+
+    })
+</script>
+
+</html>

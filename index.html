@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Socket.IO chat</title>
+  <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.27.2/axios.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding-bottom: 3rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    #form {
+      background: rgba(0, 0, 0, 0.15);
+      padding: 0.25rem;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      height: 3rem;
+      box-sizing: border-box;
+      backdrop-filter: blur(10px);
+    }
+
+    #input {
+      border: none;
+      padding: 0 1rem;
+      flex-grow: 1;
+      border-radius: 2rem;
+      margin: 0.25rem;
+    }
+
+    #input:focus {
+      outline: none;
+    }
+
+    #form>button {
+      background: #333;
+      border: none;
+      padding: 0 1rem;
+      margin: 0.25rem;
+      border-radius: 3px;
+      outline: none;
+      color: #fff;
+    }
+
+    #messages {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+      /* min-height: 25rem; */
+    }
+
+    #messages>li {
+      padding: 0.5rem 1rem;
+    }
+
+    #messages>li:nth-child(odd) {
+      background: #efefef;
+    }
+
+    .count {
+      height: 50px;
+      width: 110px;
+      position: absolute;
+      background-color: #fff;
+      box-shadow: 0px 0px 15px 6px rgba(112, 112, 130, 0.2);
+      right: 10px;
+      top: 50px;
+      border-radius: 5px;
+      text-align: center;
+      line-height: 50px;
+      color: rgba(194, 194, 241, 0.879);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="count" id="room"></div>
+  <div class="count" id="changeRoom" style="top: 110px;">Change Room</div>
+  <div class="count" id="disconnect" style="top: 170px;">disconnect</div>
+  <div class="count" id="connect" style="top:270px;" onclick="createConnect()">connect</div>
+  <ul id="messages"></ul>
+  <form id="form" action="">
+    <input id="input" autocomplete="off" /><button>Send</button>
+  </form>
+  <script src="./js/socket.io.js"></script>
+  <script>
+    function createConnect() {
+      init(prompt('namespace'))
+    }
+    
+    function init(namespace) {
+      const url = 'http://127.0.0.1:3000'
+      // const url = 'http://10.1.83.123:3000'
+      // console.log(`${url}/${namespace}`);
+      const socket = io.connect(`${url}/${namespace}`, {
+        extraHeaders: {
+          Authorization: `${localStorage.getItem('token')}`
+        }
+      });
+
+      const messages = document.querySelector('#messages')
+      const form = document.querySelector('#form')
+      const input = document.querySelector('#input')
+      const changeRoomDiv = document.querySelector('#changeRoom')
+      const roomDiv = document.querySelector('#room')
+      const disconnect = document.querySelector('#disconnect')
+
+      socket.on('mp4IO',(res) =>{
+        console.log(res);
+      })
+
+      socket.on('fir_connect', (room) => {
+        roomDiv.textContent = `room${room}`
+      })
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (input.value) {
+          socket.emit('chat message', input.value)
+          input.value = '';
+        }
+      })
+
+      socket.on('display', (message) => {
+        showMessage(message)
+      })
+
+      function showMessage(message) {
+        const li = document.createElement('li')
+        li.textContent = message
+        messages.appendChild(li)
+        window.scrollTo(0, document.body.scrollHeight)
+      }
+
+      changeRoomDiv.addEventListener('click', () => {
+        socket.emit('change room', prompt('Which Room?'), res => {
+          if (res.status == 200) {
+            messages.textContent = ''
+            console.log(res.data);
+            roomDiv.textContent = `room${res.data.room}`
+            showMessage(`You Join ${res.data.namespace} room${res.data.room}`)
+          }
+        })
+      })
+
+      disconnect.addEventListener('click',()=>{
+        socket.disconnect()
+        roomDiv.textContent = ''
+        messages.textContent = ''
+      })
+
+      socket.on("connect_error", err => {
+        alert(err.message);
+        location.href = './login.html'
+      });
+
+    }
+
+  </script>
+</body>
+
+</html>
